@@ -4,9 +4,9 @@ CPITCH: -50
 CYAW: 90
 DEBUG: 0
 OBJECT: 1
-TIME_STOP: 0.25
-ACTIVE: true
-WHISKER_NAMES: ["R"]
+TIME_STOP: 0.5
+ACTIVE: false
+WHISKER_NAMES: ["ALL"]
 SAVE_VIDEO: false
 SAVE: true
 file_video: "../output/video_peg.mp4"

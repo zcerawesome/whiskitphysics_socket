@@ -9,5 +9,5 @@ file_whisking_angle: "whisking_trajectory.csv"
 #file_whisking_angle: ""
 
 # enable/disable exploring mode for rat head
-EXPLORING: false
-dir_rathead_trajectory: "rathead_trajectory_sample.csv"
+EXPLORING: true
+dir_rathead_trajectory: "../data/rathead_trajectory_sample.csv"

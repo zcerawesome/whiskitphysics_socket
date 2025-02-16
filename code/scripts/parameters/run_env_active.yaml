@@ -9,7 +9,7 @@ TIME_STOP: 1.0
 WHISKER_NAMES: ["R"]
 RATHEAD_POSITION: [-95, 45, -140]
 RATHEAD_ORIENT: [.17, 0, 1.6]
-SAVE_VIDEO: false
-SAVE: false
+SAVE_VIDEO: true
+SAVE: true
 file_video: "../output/video_wall.mp4"
 dir_out: "../output/full_array_env_active"

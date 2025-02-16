@@ -8,7 +8,7 @@ gravity: [0, 0, 0]
 OBJECT: 0
 
 # parameters for peg (OBJECT = 1)
-PEG_LOC: [20, 25, 0]
-PEG_SPEED: 10
+PEG_LOC: [20, 35, 0]
+PEG_SPEED: 0
 
 file_env: "data/environment/env_1.obj"
