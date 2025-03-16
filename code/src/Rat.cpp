@@ -33,7 +33,7 @@ Rat::Rat(GUIHelperInterface* helper, btAlignedObjectArray<btCollisionShape*>* sh
 
 	// define shape and body of head (mass=100)
 	btVector4 color = btVector4(0.1,0.1,0.1,1);
-	rathead = new Object(helper,shapes,headTransform,dir_rathead,color,SCALE/10,100.,COL_HEAD,headCollidesWith);
+	rathead = new Object(helper,shapes,headTransform,dir_rathead,color,SCALE/10,1e10,COL_HEAD,headCollidesWith);
 
 	// create new Whiskers for this rat head
 	// origin: mean position of all basepoints
@@ -94,17 +94,38 @@ const btVector3 Rat::getAngularVelocity(){
 	return rathead->body->getAngularVelocity();
 }
 
-void Rat::whisk(int step, std::vector<std::vector<float>> whisker_vel){
+const btQuaternion Rat::getOrientation()
+{
+	return rathead->body->getOrientation();
+}
 
-	// total number of steps in one cycle of whisking phase
-	int totalStep = whisker_vel[0].size()/3;
+const btQuaternion Rat::getWhiskerOrientation(int whisker)
+{
+	return m_whiskerArray[whisker]->getOrientation();
+}
+
+void Rat::getWhiskerLinkPositions(std::vector<std::vector<float>>& positions, int whisker)
+{
+	positions.push_back(m_whiskerArray[whisker]->getX());
+	positions.push_back(m_whiskerArray[whisker]->getY());
+	positions.push_back(m_whiskerArray[whisker]->getZ());
+}
+
+const btVector3 Rat::getRotation()
+{
+	btScalar roll, pitch, yaw;
+	rathead->body->getOrientation().getEulerZYX(yaw, roll, pitch);
+	return {pitch, roll, yaw};
+}
+
+void Rat::whisk(json angular_velocity_json){
 
 	// for every whisker, read its angular velocity at this step
-	for (int i=0;i<m_whiskerArray.size();i++){
-		int idx = m_whiskerArray[i]->idx;
-		btScalar a_vel_0 = whisker_vel[idx][(step%totalStep)*3-3];
-		btScalar a_vel_1 = whisker_vel[idx][(step%totalStep)*3-2];
-		btScalar a_vel_2 = whisker_vel[idx][(step%totalStep)*3-1];
+	for (int i=0; i < m_whiskerArray.size(); ++i) {
+		const std::string wname = m_whiskerArray[i]->getWhiskerName();
+		btScalar a_vel_0 = angular_velocity_json[wname][0];
+		btScalar a_vel_1 = angular_velocity_json[wname][1];
+		btScalar a_vel_2 = angular_velocity_json[wname][2];
 		m_whiskerArray[i]->whisk(a_vel_0, a_vel_1, a_vel_2, getAngularVelocity());
 	}
 }
@@ -143,6 +164,11 @@ void Rat::dump_F(output* data){
 	data->Fx.push_back(fx);
 	data->Fy.push_back(fy);
 	data->Fz.push_back(fz);
+}
+
+std::vector<int> Rat::get_C(int whisker)
+{
+	return m_whiskerArray[whisker]->getCollision();
 }
 
 // function to obtain x coordinates of all whisker units

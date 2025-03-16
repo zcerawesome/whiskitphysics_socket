@@ -5,7 +5,7 @@ CYAW: 90
 DEBUG: 0
 OBJECT: 1
 TIME_STOP: 0.5
-ACTIVE: false
+ACTIVE: true
 WHISKER_NAMES: ["ALL"]
 SAVE_VIDEO: false
 SAVE: true

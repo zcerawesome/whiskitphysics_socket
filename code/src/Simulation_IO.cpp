@@ -276,7 +276,7 @@ void read_csv_string(std::string fileName, std::vector<std::string> &dataList){
     }
     else{
         std::cout << "\n======== ABORT SIMULATION ========" << std::endl;
-        std::cout << "Failure in loading file " << fileName << "\n" << std::endl;
+        std::cout << "Failure in loading string file " << fileName << "\n" << std::endl;
         exit (EXIT_FAILURE);
     }
 }
@@ -307,7 +307,7 @@ void read_csv_int(std::string fileName, std::vector<std::vector<int> > &dataList
     }
     else{
         std::cout << "\n======== ABORT SIMULATION ========" << std::endl;
-        std::cout << "Failure in loading file " << fileName << "\n" << std::endl;
+        std::cout << "Failure in loading int file " << fileName << "\n" << std::endl;
         exit (EXIT_FAILURE);
     }
 
@@ -341,7 +341,7 @@ void read_csv_float(std::string fileName, std::vector<std::vector<float> > &data
     }
     else{
         std::cout << "\n======== ABORT SIMULATION ========" << std::endl;
-        std::cout << "Failure in loading file " << fileName << "\n" << std::endl;
+        std::cout << "Failure in loading float file " << fileName << "\n" << std::endl;
         exit (EXIT_FAILURE);
     }
 

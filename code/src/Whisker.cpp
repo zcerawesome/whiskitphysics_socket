@@ -311,11 +311,13 @@ std::vector<int> Whisker::getCollision(){
 	return flags;
 }
 
-
+btQuaternion Whisker::getOrientation()
+{
+	return base->getOrientation();
+}
 
 // function to get torque at whisker base
 btVector3 Whisker::getTorques(){
-
 	btVector3 torques = baseConstraint->getJointFeedback()->m_appliedTorqueBodyA;
 	if(PRINT==1){
 		std::cout << "Mx : " << torques[0] << std::endl;
@@ -336,6 +338,7 @@ btVector3 Whisker::getForces(){
 	}
 	return forces;
 }
+
 
 
 // function to obtain the world coordinates of each whisker unit

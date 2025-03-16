@@ -27,6 +27,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <vector>
 #include <string>
 
+#include "../jsonlib/json.hpp"
+
+using json = nlohmann::json;
+
+
 class Rat
 {
 private:
@@ -57,10 +62,15 @@ public:
 	const btTransform getTransform();
 	const btVector3 getLinearVelocity();
 	const btVector3 getAngularVelocity();
+	const btVector3 getRotation();
+	const btQuaternion getOrientation();
+	const btQuaternion getWhiskerOrientation(int whisker);
+	void getWhiskerLinkPositions(std::vector<std::vector<float>>& positions, int whisker);
 
-	void whisk(int step, std::vector<std::vector<float>> whisker_loc_vel);
+	void whisk(json angular_velocity_json);
 	btAlignedObjectArray<Whisker*> getArray();
 
+	std::vector<int> get_C(int whisker);
 	void dump_M(output* data);
 	void dump_F(output* data);
 	void dump_Q(output* data);

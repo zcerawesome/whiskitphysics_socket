@@ -161,18 +161,44 @@ void Simulation::stepSimulation(){
 
 		// wait for "muscle control" from neural network script -- this is a blocking operation (wait until packet is received)
                 // char buffer[1024];
-                char buffer[10024];
-                memset(buffer, 0, sizeof(buffer));
-                recv(clientSocket, buffer, sizeof(buffer), 0);
-                std::cout << "Received data from neural network script: " << buffer << std::endl;
+		char buffer[20048];
+		memset(buffer, 0, sizeof(buffer));
+		recv(clientSocket, buffer, sizeof(buffer), 0);
+		json recv_data = json::parse(buffer);
+		std::cout << "Received data from neural network script " << std::endl;
+		json parsed_data;
+		std::string json_data(buffer);
+		double x_velocity, y_velocity, z_velocity;
+		double x_rotational_velocity, y_rotational_velocity, z_rotational_velocity;
+		bool whisking;
+		try
+		{
+			parsed_data = json::parse(json_data);
+			x_velocity = parsed_data["x_velocity"];
+			y_velocity = parsed_data["y_velocity"];
+			z_velocity = parsed_data["z_velocity"];
+			x_rotational_velocity = parsed_data["x_rotational_velocity"];
+			y_rotational_velocity = parsed_data["y_rotational_velocity"];
+			z_rotational_velocity = parsed_data["z_rotational_velocity"];
+			whisking = parsed_data["whisking"];
+		}
+		catch (const json::parse_error& e)
+		{
+			std::cerr << "JSON PARSING ERROR: " << e.what() << std::endl;
+		}
+		catch (const json::type_error& e)
+		{
+			std::cerr << "JSON TYPE ERROR: " << e.what() << std::endl;
+		}
 		// decoding data received and do something with it -- for later
-
+	
 		json data_for_all_whiskers;
-
 		for (size_t i = 0; i < rat->getWhiskerArraySize(); ++i) {
 			const std::string w_name = rat->getWhisker(i)->getWhiskerName();
 			const btVector3 force_from_whisker = rat->getWhisker(i)->getForces();
 			const btVector3 torque_from_whisker = rat->getWhisker(i)->getTorques();
+			const std::vector<int> collision = rat->get_C(i);
+
 
 			json force = json::array();
 			force.push_back(force_from_whisker[0]);
@@ -182,9 +208,25 @@ void Simulation::stepSimulation(){
 			torque.push_back(torque_from_whisker[0]);
 			torque.push_back(torque_from_whisker[1]);
 			torque.push_back(torque_from_whisker[2]);
+
+			std::vector<std::vector<float>> positions;
+			rat->getWhiskerLinkPositions(positions, i);
+
+			json orientation = json::array();
+			const btQuaternion orient = rat->getWhiskerOrientation(i);
+			orientation.push_back(orient[0]);
+			orientation.push_back(orient[1]);
+			orientation.push_back(orient[2]);
+			orientation.push_back(orient[3]);
+
 			json whisker_data;
+			whisker_data["X"] = positions[0];
+			whisker_data["Y"] = positions[1];
+			whisker_data["Z"] = positions[2];
 			whisker_data["force"] = force;
 			whisker_data["torque"] = torque;
+			whisker_data["Collision"] = collision;
+			whisker_data["Orientation"] = orientation;
 			data_for_all_whiskers[w_name] = whisker_data;
 		}
 
@@ -192,10 +234,31 @@ void Simulation::stepSimulation(){
 		data["time"] = m_time,
 		data["whiskers"] = data_for_all_whiskers;
 
-		std::cout << "Sending message: " << data << "...\n";
+		btVector3 ratPosition = rat->getPosition();
+		json position_data = json::array();
+		position_data.push_back(ratPosition[0]);
+		position_data.push_back(ratPosition[1]);
+		position_data.push_back(ratPosition[2]);
+		data["Position"] = position_data;
+
+		btVector3 ratEulerAngles = rat->getRotation();
+		json angle_data = json::array();
+		angle_data.push_back(ratEulerAngles[0]);
+		angle_data.push_back(ratEulerAngles[1]);
+		angle_data.push_back(ratEulerAngles[2]);
+		data["Angle"] = angle_data;
+
+		const btQuaternion& ratOrientation = rat->getOrientation();
+		json orientation = json::array();
+		orientation.push_back(ratOrientation[0]);
+		orientation.push_back(ratOrientation[1]);
+		orientation.push_back(ratOrientation[2]);
+		orientation.push_back(ratOrientation[3]);
+		data["Orientation"] = orientation;
+
+		// std::cout << "Sending message: " << data << "...\n";
 		std::string jsonData = data.dump();
 		send(clientSocket, jsonData.c_str(), jsonData.size(), 0);
-
 
 		// first, push back data into data_dump
 		if(!NO_WHISKERS && SAVE) {
@@ -207,23 +270,24 @@ void Simulation::stepSimulation(){
 		// moving object 1
 		if(OBJECT==1){
 			if(PEG_SPEED > 0){
-				btVector3 velocity = PEG_SPEED * btVector3(0.4,-1,0).normalized();
+				// btVector3 velocity = PEG_SPEED * btVector3(0.4,-1,0).normalized();
+				btVector3 velocity = {0,0,0};
 				peg->setLinearVelocity(velocity);
 			}
 		}
 
 		// move array if in ACTIVE mode
-		if(ACTIVE && !NO_WHISKERS){
-			rat->whisk(m_step, whisker_vel);
-		}
 
 		// move rat head if in EXPLORING mode
 		if(EXPLORING){
 			this_loc_vel = HEAD_LOC_VEL[m_step-1];
-			rat->setLinearVelocity(btVector3(this_loc_vel[3], this_loc_vel[4], this_loc_vel[5]/10));
+			rat->setLinearVelocity(btVector3(x_velocity, y_velocity, z_velocity));
 			// rat->setLinearVelocity(btVector3(0, 0, 0));
-			rat->setAngularVelocity(btVector3(this_loc_vel[6], this_loc_vel[7], this_loc_vel[8]));
+			rat->setAngularVelocity(btVector3(x_rotational_velocity, y_rotational_velocity, z_rotational_velocity));
 			// rat->setAngularVelocity(btVector3(0, 0, 0));
+		}
+		if(ACTIVE && !NO_WHISKERS && whisking){
+			rat->whisk(recv_data["active_whisking_data"]);
 		}
 
 		// step simulation

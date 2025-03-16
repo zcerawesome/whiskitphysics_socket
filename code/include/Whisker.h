@@ -138,6 +138,7 @@ public:
 	btRigidBody* get_unit(int idx) const;
 	btRigidBody* get_base() const;
 
+	btQuaternion getOrientation();
 	btVector3 getTorques();
 	btVector3 getForces();
 	btVector3 getPosition(int linknr);

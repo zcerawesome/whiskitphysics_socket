@@ -294,7 +294,7 @@ int main(int argc, char** argv)
   	}
   	catch(std::exception& e)
   	{
-		std::cerr << "Unhandled Exception reached the top of main: " << e.what() << ", application will now exit" << std::endl;
+		std::cerr << "Unhandled Exception reached the top of main_opengl: " << e.what() << ", application will now exit" << std::endl;
 		return 2;
   	}
 

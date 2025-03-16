@@ -9,7 +9,7 @@ WHISKER_NAMES: {"RA0", "RA1", "RA2", "RA3", "RA4", "RB0", "RB1", "RB2", "RB3", "
 BLOW: true				# increase whisker diameter for better visualization (will affect dynamics!!)
 NO_MASS: false			# disable mass of bodies
 NO_WHISKERS: false		# disable whiskers
-NUM_LINKS: 20			# set number of links
+NUM_LINKS: 10			# set number of links
 RHO_BASE: 1260.0		# set density at whisker base
 RHO_TIP: 1690.0		# set density at whisker tip
 E: 5e9				# set young's modulus (GPa) at whisker base
