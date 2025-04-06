@@ -392,6 +392,11 @@ std::vector<btScalar> Whisker::getZ(){
 	return trajectories;
 }
 
+int Whisker::getNumLinks()
+{
+	return NUM_LINKS;
+}
+
 btVector3 Whisker::getPosition(int linknr){
 	return whisker[linknr]->getCenterOfMassPosition();
 }

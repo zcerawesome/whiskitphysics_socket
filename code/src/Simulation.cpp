@@ -171,6 +171,7 @@ void Simulation::stepSimulation(){
 		double x_velocity, y_velocity, z_velocity;
 		double x_rotational_velocity, y_rotational_velocity, z_rotational_velocity;
 		bool whisking;
+		bool exploring;
 		try
 		{
 			parsed_data = json::parse(json_data);
@@ -181,6 +182,7 @@ void Simulation::stepSimulation(){
 			y_rotational_velocity = parsed_data["y_rotational_velocity"];
 			z_rotational_velocity = parsed_data["z_rotational_velocity"];
 			whisking = parsed_data["whisking"];
+			exploring = parsed_data["exploring"];
 		}
 		catch (const json::parse_error& e)
 		{
@@ -198,7 +200,10 @@ void Simulation::stepSimulation(){
 			const btVector3 force_from_whisker = rat->getWhisker(i)->getForces();
 			const btVector3 torque_from_whisker = rat->getWhisker(i)->getTorques();
 			const std::vector<int> collision = rat->get_C(i);
-
+			
+			json collisionInfo = json::array();
+			for(int val: collision)
+				collisionInfo.push_back(val);
 
 			json force = json::array();
 			force.push_back(force_from_whisker[0]);
@@ -220,9 +225,23 @@ void Simulation::stepSimulation(){
 			orientation.push_back(orient[3]);
 
 			json whisker_data;
-			whisker_data["X"] = positions[0];
-			whisker_data["Y"] = positions[1];
-			whisker_data["Z"] = positions[2];
+			if(m_step == 1)
+			{
+				whisker_data["Link_Position"] = NULL;
+			}
+			else
+			{
+				json positions_json = json::array();
+				for(int link = 0; link < positions[0].size(); link++)
+				{
+					json position = json::array();
+					position.push_back(positions[0][link]);
+					position.push_back(positions[1][link]);
+					position.push_back(positions[2][link]);
+					positions_json.push_back(position);
+				}
+				whisker_data["Link_Position"] = positions_json;
+			}
 			whisker_data["force"] = force;
 			whisker_data["torque"] = torque;
 			whisker_data["Collision"] = collision;
@@ -259,7 +278,6 @@ void Simulation::stepSimulation(){
 		// std::cout << "Sending message: " << data << "...\n";
 		std::string jsonData = data.dump();
 		send(clientSocket, jsonData.c_str(), jsonData.size(), 0);
-
 		// first, push back data into data_dump
 		if(!NO_WHISKERS && SAVE) {
 			rat->dump_M(data_dump);
@@ -279,7 +297,7 @@ void Simulation::stepSimulation(){
 		// move array if in ACTIVE mode
 
 		// move rat head if in EXPLORING mode
-		if(EXPLORING){
+		if(EXPLORING && exploring){
 			this_loc_vel = HEAD_LOC_VEL[m_step-1];
 			rat->setLinearVelocity(btVector3(x_velocity, y_velocity, z_velocity));
 			// rat->setLinearVelocity(btVector3(0, 0, 0));

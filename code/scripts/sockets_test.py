@@ -20,7 +20,7 @@ def collision_waiting():
     global target_position
     global current_position
     global hit_position
-    received_data['whiskers']['RA0']['Collision']
+    return
     if target_position == None and received_data != None:
         for i in received_data['whiskers']:
             for j in received_data['whiskers'][i]['Collision']:
@@ -133,7 +133,6 @@ def handle_client(client_socket, index):
     global whisker_velocities
     global idx
     global Data_Accumulated
-    # threshold = .005
     # send a packet
     response_data = {'message' : 'JSON data received'}
     # norm_force  = average_force(received_data)
@@ -176,7 +175,7 @@ def handle_client(client_socket, index):
     
                                                     
     if not change_trajectory:
-        current_trajectory = read_csv(index)
+        # current_trajectory = read_csv(index)
         collision_waiting()
     else:
         current_trajectory = dynamic_nose_touch(received_data)
@@ -199,17 +198,22 @@ def handle_client(client_socket, index):
                                                                 whisker_velocities[int(idx[i])][int((current_time_ms % total_step) * 3 -2)],
                                                                 whisker_velocities[int(idx[i])][int((current_time_ms % total_step) * 3 -1)]
                                                                 ]
-        # whisking_data["active_whisking_data"][whisker_name] = [0,0,0],                                                               
-
+    current_trajectory =  {'x_velocity': 0, 
+            'y_velocity': 0, 
+            'z_velocity': 0,
+            'x_rotational_velocity': 0, 
+            'y_rotational_velocity': 0, 
+            'z_rotational_velocity': 0}
     response_data.update(current_trajectory)
     response_data.update(whisking_data)
     response_data.update({'whisking': True})
+    response_data.update({'exploring': False})
     response_json = json.dumps(response_data)
     client_socket.send(response_json.encode('utf-8'))
 
     # receive a packet
-    data = client_socket.recv(20048)
-    json_data = None
+    data = client_socket.recv(80048)
+    # json_data = None
     if data:
         json_data = json.loads(data.decode('utf-8'))
         received_data = json_data
@@ -238,6 +242,7 @@ def save_data():
     global Data_Accumulated
     with open('../output/full_array_peg_active/whiskit_data.pkl', "wb") as file:
         pickle.dump(Data_Accumulated, file)
+    print('Data Saved to Pickle')
 
 def main():
     global whisker_velocities
@@ -259,10 +264,10 @@ def main():
             while True:
                 handle_client(client_socket, index)
                 index += 1
-        server_socket.close()
     except Exception as e:
         server_socket.close()
         print(e)
+    server_socket.close()
     
 if __name__ == "__main__":
     main()

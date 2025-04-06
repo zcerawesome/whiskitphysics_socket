@@ -33,7 +33,7 @@ Rat::Rat(GUIHelperInterface* helper, btAlignedObjectArray<btCollisionShape*>* sh
 
 	// define shape and body of head (mass=100)
 	btVector4 color = btVector4(0.1,0.1,0.1,1);
-	rathead = new Object(helper,shapes,headTransform,dir_rathead,color,SCALE/10,1e10,COL_HEAD,headCollidesWith);
+	rathead = new Object(helper,shapes,headTransform,dir_rathead,color,SCALE/10,parameters["RAT_MASS"].as<float>(),COL_HEAD,headCollidesWith);
 
 	// create new Whiskers for this rat head
 	// origin: mean position of all basepoints
@@ -120,12 +120,19 @@ const btVector3 Rat::getRotation()
 
 void Rat::whisk(json angular_velocity_json){
 
+	btTransform headTransform = rathead->body->getCenterOfMassTransform();
+	headTransform.setOrigin({0,0,0});
 	// for every whisker, read its angular velocity at this step
 	for (int i=0; i < m_whiskerArray.size(); ++i) {
 		const std::string wname = m_whiskerArray[i]->getWhiskerName();
 		btScalar a_vel_0 = angular_velocity_json[wname][0];
 		btScalar a_vel_1 = angular_velocity_json[wname][1];
 		btScalar a_vel_2 = angular_velocity_json[wname][2];
+		btVector3 vel_vec = {a_vel_0, a_vel_1, a_vel_2};
+		vel_vec = headTransform * vel_vec;
+		a_vel_0 = vel_vec.getX();
+		a_vel_1 = vel_vec.getY();
+		a_vel_2 = vel_vec.getZ();
 		m_whiskerArray[i]->whisk(a_vel_0, a_vel_1, a_vel_2, getAngularVelocity());
 	}
 }

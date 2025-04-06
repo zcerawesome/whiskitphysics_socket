@@ -142,7 +142,7 @@ public:
 	btVector3 getTorques();
 	btVector3 getForces();
 	btVector3 getPosition(int linknr);
-
+	int getNumLinks();
 	int idx;
 
 	std::vector<float> getX();
