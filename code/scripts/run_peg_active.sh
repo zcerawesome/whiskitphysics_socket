@@ -1,1 +1,1 @@
-../build/whiskit_gui --parameters="./parameters/whisker_parameters.yaml,./parameters/whisker_stimulation_parameters.yaml,./parameters/environment_parameters.yaml,./parameters/simulation_parameters.yaml,./parameters/run_peg_active.yaml"
+../build/whiskit_gui --parameters="./parameters/whisker_parameters.yaml,./parameters/whisker_stimulation_parameters.yaml,./parameters/environment_parameters.yaml,./parameters/simulation_parameters.yaml,./parameters/run_files/run_peg_active.yaml"

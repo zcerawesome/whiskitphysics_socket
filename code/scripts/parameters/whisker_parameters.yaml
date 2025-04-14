@@ -21,7 +21,7 @@ base_damping: 0.2
 # rat position/orientation parameters
 dir_rathead: "../data/object/NewRatHead.obj"
 RATHEAD_LOC: [0,0,0] 			# set position of rathead
-RATHEAD_ORIENT: [-0.5,0,0] 		# set initial heading of rathead
+RATHEAD_ORIENT: [0.7,-0.5,-0.25] 		# set initial heading of rathead
 
 # whisker parameters
 WHISKER_PARAMS_DIR: "../data/whisker_param_model_rat/"   # "../data/whisker_param_average_rat/"

@@ -35,6 +35,7 @@ Rat::Rat(GUIHelperInterface* helper, btAlignedObjectArray<btCollisionShape*>* sh
 	btVector4 color = btVector4(0.1,0.1,0.1,1);
 	rathead = new Object(helper,shapes,headTransform,dir_rathead,color,SCALE/10,parameters["RAT_MASS"].as<float>(),COL_HEAD,headCollidesWith);
 
+	rathead->body->setActivationState(DISABLE_DEACTIVATION);
 	// create new Whiskers for this rat head
 	// origin: mean position of all basepoints
 	btTransform head2origin = createFrame(originOffset,originOrientation);

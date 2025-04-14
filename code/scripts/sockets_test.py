@@ -14,6 +14,63 @@ import csv
 from scipy.spatial.transform import Rotation as R
 import pickle
 
+def update_whisking_data(whisking_data):
+    global whisker_velocities
+    whisker_names = ["RA0", "RA1", "RA2", "RA3", "RA4", "RB0", "RB1", "RB2", "RB3", "RB4",
+                                    "RC0", "RC1", "RC2", "RC3", "RC4", "RC5",
+                                "RD0", "RD1", "RD2", "RD3", "RD4", "RD5", 
+                                "RE1", "RE2", "RE3", "RE4", "RE5", "LA0", "LA1" ,"LA2",
+                                "LA3", "LA4" ,"LB0", "LB1", "LB2", "LB3", "LB4", "LC0", "LC1",
+                                "LC2", "LC3", "LC4", "LC5", "LD0", "LD1", "LD2", "LD3", "LD4",
+                                "LD5", "LE1", "LE2", "LE3", "LE4", "LE5"]
+    for i in range(len(whisker_names)):
+        whisker_name = whisker_names[i]
+        total_step = int(len(whisker_velocities[0])/3)
+        whisking_data["active_whisking_data"][whisker_name] = [ whisker_velocities[int(idx[i])][int((current_time_ms % total_step) * 3 -3)],
+                                                                whisker_velocities[int(idx[i])][int((current_time_ms % total_step) * 3 -2)],
+                                                                whisker_velocities[int(idx[i])][int((current_time_ms % total_step) * 3 -1)]
+                                                                ]
+
+def receive_data(received_data):
+    global current_position
+    global current_angle
+    global nose_position 
+    if received_data != None:
+        current_position = [float(x) for x in received_data['Position']]
+        current_angle = [x*np.pi for x in received_data['Angle']]
+        nose_position = get_nose_position(current_angle, current_position)
+
+
+def get_nose_position(current_angle, headPosition):
+    roll = current_angle[0]
+    pitch = current_angle[1]
+    yaw = current_angle[2]
+    R_z = np.array([
+        [np.cos(yaw), -np.sin(yaw), 0],
+        [np.sin(yaw),  np.cos(yaw), 0],
+        [0,            0,           1]
+    ])
+
+    R_y = np.array([
+        [np.cos(roll), 0, np.sin(roll)],
+        [0,             1, 0],
+        [-np.sin(roll), 0, np.cos(roll)]
+    ])
+
+    R_x = np.array([
+        [1, 0,            0],
+        [0, np.cos(pitch), -np.sin(pitch)],
+        [0, np.sin(pitch),  np.cos(pitch)]
+    ])
+
+    R = R_z @ R_y @ R_x
+    A = np.array([0, 36, 2.9872])
+    A_rotated = R @ A
+    B = np.array([x for x in headPosition])
+
+    A_world = B + A_rotated
+    return [A_world[2], A_world[1], A_world[0]]
+    
 def collision_waiting():
     global received_data
     global change_trajectory
@@ -135,91 +192,39 @@ def handle_client(client_socket, index):
     global Data_Accumulated
     # send a packet
     response_data = {'message' : 'JSON data received'}
-    # norm_force  = average_force(received_data)
-    if received_data != None:
-        current_position = [float(x) for x in received_data['Position']]
-        current_angle = [x for x in received_data['Angle']]
-        current_time_ms = received_data['time']
-        # for i in current_position:
-        #     print(i, end=' ')
-        # print()
-        roll = current_angle[0]
-        pitch = current_angle[1]
-        yaw = current_angle[2]
-        R_z = np.array([
-        [np.cos(yaw), -np.sin(yaw), 0],
-        [np.sin(yaw),  np.cos(yaw), 0],
-        [0,            0,           1]
-        ])
-
-        R_y = np.array([
-            [np.cos(roll), 0, np.sin(roll)],
-            [0,             1, 0],
-            [-np.sin(roll), 0, np.cos(roll)]
-        ])
-
-        R_x = np.array([
-            [1, 0,            0],
-            [0, np.cos(pitch), -np.sin(pitch)],
-            [0, np.sin(pitch),  np.cos(pitch)]
-        ])
-
-        R = R_z @ R_y @ R_x
-        A = np.array([0, 36, 2.9872])
-        A_rotated = R @ A
-        B = np.array([x for x in current_position])
-
-        A_world = B + A_rotated
-        for i in range(3):
-            nose_position[i] = A_world[i]
     
+    receive_data(received_data)
                                                     
     if not change_trajectory:
-        # current_trajectory = read_csv(index)
         collision_waiting()
     else:
         current_trajectory = dynamic_nose_touch(received_data)
 
-
-    whisker_names = ["RA0", "RA1", "RA2", "RA3", "RA4", "RB0", "RB1", "RB2", "RB3", "RB4",
-                                    "RC0", "RC1", "RC2", "RC3", "RC4", "RC5",
-                                "RD0", "RD1", "RD2", "RD3", "RD4", "RD5", 
-                                "RE1", "RE2", "RE3", "RE4", "RE5", "LA0", "LA1" ,"LA2",
-                                "LA3", "LA4" ,"LB0", "LB1", "LB2", "LB3", "LB4", "LC0", "LC1",
-                                "LC2", "LC3", "LC4", "LC5", "LD0", "LD1", "LD2", "LD3", "LD4",
-                                "LD5", "LE1", "LE2", "LE3", "LE4", "LE5"]
-
-
     whisking_data = {'active_whisking_data': {}}
-    for i in range(len(whisker_names)):
-        whisker_name = whisker_names[i]
-        total_step = int(len(whisker_velocities[0])/3)
-        whisking_data["active_whisking_data"][whisker_name] = [ whisker_velocities[int(idx[i])][int((current_time_ms % total_step) * 3 -3)],
-                                                                whisker_velocities[int(idx[i])][int((current_time_ms % total_step) * 3 -2)],
-                                                                whisker_velocities[int(idx[i])][int((current_time_ms % total_step) * 3 -1)]
-                                                                ]
+    update_whisking_data(whisking_data)
     current_trajectory =  {'x_velocity': 0, 
             'y_velocity': 0, 
             'z_velocity': 0,
             'x_rotational_velocity': 0, 
             'y_rotational_velocity': 0, 
             'z_rotational_velocity': 0}
+
     response_data.update(current_trajectory)
     response_data.update(whisking_data)
     response_data.update({'whisking': True})
-    response_data.update({'exploring': False})
+    response_data.update({'exploring': True})
     response_json = json.dumps(response_data)
     client_socket.send(response_json.encode('utf-8'))
 
     # receive a packet
     data = client_socket.recv(80048)
-    # json_data = None
     if data:
         json_data = json.loads(data.decode('utf-8'))
         received_data = json_data
         Data_Accumulated.append(received_data)
         print("Received JSON data:")
-    #client_socket.close()
+    else:
+        client_socket.close()
 
 def read_csv_float(file_name):
     data_list = []
@@ -254,10 +259,8 @@ def main():
         server_socket.listen(1)
         print("Server listening on", host, "port", port)
         index = 0
+        #Loading whisking velocities file
         whisker_velocities = read_csv_float('../data/whisking_trajectory_sample.csv')
-        # df = pandas.read_csv('../data/whisking_trajectory_sample.csv', header=None)
-        # whisker_velocities = df
-        # whisker_velocities = df.values.tolist()
         while True:
             client_socket, client_address = server_socket.accept()
             print("Connected by", client_address)
